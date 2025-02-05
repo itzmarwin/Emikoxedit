@@ -5,6 +5,7 @@ from pyrogram import Client, filters
 from pyrogram.types import Message
 from motor.motor_asyncio import AsyncIOMotorClient
 import config  # Import config file
+from pyrogram.errors import RPCError, FloodWait
 
 # Initialize Bot
 app = Client("EmikoXEdit", api_id=config.API_ID, api_hash=config.API_HASH, bot_token=config.BOT_TOKEN)
@@ -45,7 +46,13 @@ def run_flask():
 
 async def start_bot():
     print("✅ Bot is starting...")
-    await app.start()
+    try:
+        await app.start()
+    except RPCError as e:
+        if isinstance(e, FloodWait):
+            print(f"⚠️ Flood wait error. Try again after {e.x} seconds.")
+        else:
+            print(f"❌ RPC Error: {e}")
 
 if __name__ == "__main__":
     # Run Flask in a separate thread
