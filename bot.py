@@ -7,7 +7,7 @@ from pyrogram.types import Message
 # Bot Configuration
 API_ID = 21346925  
 API_HASH = "908c9a085a238d1cd484a4269c887234"  
-BOT_TOKEN = "7733194032:AAGSzRGA3ihA_fvngTa0h60sBkBKX6BjWaQ"  
+BOT_TOKEN = "8180370371:AAF9NzrYz9pOqDGAxUWAPHIcW-HUFaANdA0"  
 
 # Initialize Bot
 app = Client("EmikoXEdit", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
@@ -23,7 +23,7 @@ def run_web():
     server.run(host="0.0.0.0", port=8080)
 
 # Function to delete edited messages
-@app.on_message(filters.edited & filters.group)
+@app.on_message(filters.group & filters.create(lambda _, __, m: bool(m.edit_date)))
 async def delete_edited_message(client: Client, message: Message):
     try:
         await message.delete()
