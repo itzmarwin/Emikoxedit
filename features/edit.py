@@ -1,5 +1,5 @@
-from pyrogram import Client, Message
-import logging
+from pyrogram import Client
+from pyrogram.types import Message  # Correct import for Message
 
 # This function will handle deleting edited messages in groups
 async def delete_edited_message(client: Client, message: Message):
