@@ -20,7 +20,7 @@ def home():
     return "Emiko X Edit Bot is Running!"
 
 def run_web():
-    server.run(host="0.0.0.0", port=8080)
+    server.run(host="0.0.0.0", port=8080, use_reloader=False)
 
 # Function to delete edited messages
 @app.on_message(filters.group & filters.create(lambda _, __, m: bool(m.edit_date)))
@@ -48,3 +48,4 @@ def start_bot():
 # Start the bot
 if __name__ == "__main__":
     start_bot()
+    
