@@ -19,7 +19,7 @@ async def on_message_edit(client, message):
         print(f"Error deleting edited message: {e}")
 
 # Add the handler to monitor edited messages in groups
-app.add_handler(MessageHandler(on_message_edit, filters.group & filters.edited))
+app.add_handler(MessageHandler(on_message_edit, filters.update.edited))  # Corrected to filters.update.edited
 
 # Flask Server for Render Free Hosting
 server = Flask(__name__)
