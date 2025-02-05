@@ -1,11 +1,15 @@
-from pyrogram import Client
-from pyrogram.types import Message  # Correct import for Message
+from pyrogram import Client, filters
+from pyrogram.types import Message
 
-# This function will handle deleting edited messages in groups
-async def delete_edited_message(client: Client, message: Message):
-    try:
-        # Delete the edited message
-        await message.delete()
-        logging.info(f"Deleted edited message from {message.from_user.username}")
-    except Exception as e:
-        logging.error(f"Error deleting message: {e}")
+# Edited Message Handler
+@Client.on_message(filters.group & filters.text)
+async def delete_edited_messages(client: Client, message: Message):
+    if message.edit_date:  # Check if the message is edited
+        try:
+            await message.delete()
+            await message.reply_text(
+                f"**Hey {message.from_user.mention}, your edited message has been deleted!** 🚀",
+                reply_to_message_id=message.message_id
+            )
+        except Exception as e:
+            print(f"❌ Error deleting edited message: {e}")
