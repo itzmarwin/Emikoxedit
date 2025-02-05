@@ -50,7 +50,7 @@ async def start_bot():
         await app.start()
     except RPCError as e:
         if isinstance(e, FloodWait):
-            print(f"⚠️ Flood wait error. Try again after {e.x} seconds.")  # Use e.x here
+            print(f"⚠️ Flood wait error. Full exception: {e}")  # Print full exception details
         else:
             print(f"❌ RPC Error: {e}")
 
