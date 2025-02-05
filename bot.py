@@ -24,7 +24,7 @@ async def start(client, message):
 async def check_edit(client, message):
     if message.edit_date:  # Check if the message is edited
         try:
-            await message.delete()
+            await message.delete()  # Delete the edited message
             await message.reply_text(
                 "✨ **Oops! You edited your message, so I had to delete it!**\n\n"
                 "🚀 **Next time, think before you send!**",
