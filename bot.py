@@ -1,6 +1,7 @@
 from pyrogram import Client, filters
 import os
 from motor.motor_asyncio import AsyncIOMotorClient
+from features.delete_edited import delete_edited_message  # <-- Import the delete_edited feature
 
 # Config Variables
 API_ID = int(os.getenv("API_ID", ""))
@@ -20,6 +21,9 @@ broadcast_collection = db["broadcast_users"]
 @app.on_message(filters.command("start") & filters.private)
 async def start(client, message):
     await message.reply("👋 Hello! I'm Emiko X Edit. Add me to a group as admin to use my features.")
+
+# Add the delete_edited_message handler
+app.add_handler(delete_edited_message)  # <-- Add this line to handle deleted edited messages
 
 # Run Bot
 if __name__ == "__main__":
