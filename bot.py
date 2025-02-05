@@ -5,7 +5,7 @@ from flask import Flask
 import threading
 
 # Import config variables
-from features.config import API_ID, API_HASH, BOT_TOKEN
+from features/config.py import API_ID, API_HASH, BOT_TOKEN
 
 # Initialize the bot
 app = Client("nezuko_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
