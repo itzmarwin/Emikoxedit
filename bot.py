@@ -1,7 +1,8 @@
 from pyrogram import Client, filters
 import os
 from motor.motor_asyncio import AsyncIOMotorClient
-from features.delete_edited import delete_edited_message  # <-- Import the delete_edited feature
+from flask import Flask
+import threading
 
 # Config Variables
 API_ID = int(os.getenv("API_ID", ""))
@@ -22,10 +23,23 @@ broadcast_collection = db["broadcast_users"]
 async def start(client, message):
     await message.reply("👋 Hello! I'm Emiko X Edit. Add me to a group as admin to use my features.")
 
-# Add the delete_edited_message handler
-app.add_handler(delete_edited_message)  # <-- Add this line to handle deleted edited messages
+# Flask app
+server = Flask(__name__)
 
-# Run Bot
+@server.route('/')
+def home():
+    return "Bot is running!"
+
+def run_flask():
+    # PORT ko environment variable se get karo
+    PORT = int(os.environ.get("PORT", 8080))  # Agar PORT na ho, toh 8080 default rahega
+    server.run(host="0.0.0.0", port=PORT)
+
 if __name__ == "__main__":
     print("✅ Bot is starting...")
+
+    # Flask ko alag thread pe run karo
+    threading.Thread(target=run_flask, daemon=True).start()
+
+    # Pyrogram bot run karna
     app.run()
