@@ -20,13 +20,12 @@ def home():
     return "Emiko X Edit Bot is Running!"
 
 def run_web():
-    server.run(host="0.0.0.0", port=8080, threaded=True)  # Threaded mode enable
+    server.run(host="0.0.0.0", port=8080)
 
-# Function to delete edited messages with Debugging Line
+# Function to delete edited messages
 @app.on_message(filters.group & filters.create(lambda _, __, m: bool(m.edit_date)))
 async def delete_edited_message(client: Client, message: Message):
     try:
-        print(f"🚨 Edited message detected from {message.from_user.username}: {message.text}")  # Debugging Line
         await message.delete()
         await message.reply_text(
             f"**Hey {message.from_user.mention}, your edited message has been deleted.**"
@@ -35,8 +34,17 @@ async def delete_edited_message(client: Client, message: Message):
         print(f"Error deleting message: {e}")
 
 # Start Flask Server & Bot
+def start_bot():
+    try:
+        # Run Flask in a separate thread
+        Thread(target=run_web).start()  
+        print("Flask server started!")
+        
+        # Run Pyrogram bot
+        app.run()  
+    except Exception as e:
+        print(f"Error while starting the bot: {e}")
+
+# Start the bot
 if __name__ == "__main__":
-    Thread(target=run_web, daemon=True).start()  # Flask ko background me run karo
-    print("Bot is starting...")
-    app.run()
-    
+    start_bot()
