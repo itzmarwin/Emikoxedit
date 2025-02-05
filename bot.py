@@ -1,3 +1,4 @@
+import os  # 🔥 Fix: Import os module
 import threading
 from flask import Flask
 from pyrogram import Client, filters
@@ -15,7 +16,7 @@ def home():
     return "Bot is running!"
 
 def run_flask():
-    PORT = int(os.environ.get("PORT", 8080))  # Default port 8080
+    PORT = int(os.getenv("PORT", 8080))  # 🔥 Fix: Corrected os module usage
     server.run(host="0.0.0.0", port=PORT)
 
 if __name__ == "__main__":
