@@ -23,7 +23,7 @@ def run_web():
     server.run(host="0.0.0.0", port=8080)
 
 # Function to delete edited messages
-@app.on_message(filters.edited & filters.group)
+@app.on_message(filters.update.edited & filters.group)
 async def delete_edited_message(client: Client, message: Message):
     try:
         await message.delete()
@@ -38,3 +38,4 @@ if __name__ == "__main__":
     Thread(target=run_web).start()  # Flask server run karega
     print("Bot is starting...")
     app.run()
+    
