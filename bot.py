@@ -7,7 +7,7 @@ from pyrogram.types import Message
 # Bot Configuration
 API_ID = 21346925  
 API_HASH = "908c9a085a238d1cd484a4269c887234"  
-BOT_TOKEN = "8180370371:AAF9NzrYz9pOqDGAxUWAPHIcW-HUFaANdA0"  
+BOT_TOKEN = "7733194032:AAGSzRGA3ihA_fvngTa0h60sBkBKX6BjWaQ"  
 
 # Initialize Bot
 app = Client("EmikoXEdit", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
