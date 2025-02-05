@@ -4,6 +4,9 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from flask import Flask
 import threading
 
+# Importing the delete function from the edit feature
+from features.edit import delete_edited_message
+
 # Config Variables
 API_ID = int(os.getenv("API_ID", ""))
 API_HASH = os.getenv("API_HASH", "")
@@ -22,6 +25,12 @@ broadcast_collection = db["broadcast_users"]
 @app.on_message(filters.command("start") & filters.private)
 async def start(client, message):
     await message.reply("👋 Hello! I'm Emiko X Edit. Add me to a group as admin to use my features.")
+
+# Edit Message Handler (To delete edited messages)
+@app.on_message(filters.edited & filters.group)
+async def edit_message(client, message):
+    # Calling the delete_edited_message function from features/edit.py
+    await delete_edited_message(client, message)
 
 # Flask app
 server = Flask(__name__)
@@ -43,3 +52,4 @@ if __name__ == "__main__":
 
     # Pyrogram bot run karna
     app.run()
+    
