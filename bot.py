@@ -20,7 +20,7 @@ def home():
     return "Emiko X Edit Bot is Running!"
 
 def run_web():
-    server.run(host="0.0.0.0", port=8080)
+    server.run(host="0.0.0.0", port=8080, threaded=True)  # Threaded mode enable
 
 # Function to delete edited messages with Debugging Line
 @app.on_message(filters.group & filters.create(lambda _, __, m: bool(m.edit_date)))
@@ -36,7 +36,7 @@ async def delete_edited_message(client: Client, message: Message):
 
 # Start Flask Server & Bot
 if __name__ == "__main__":
-    Thread(target=run_web).start()  # Flask server run karega
+    Thread(target=run_web, daemon=True).start()  # Flask ko background me run karo
     print("Bot is starting...")
     app.run()
     
