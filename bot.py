@@ -1,5 +1,6 @@
 import asyncio
 import threading
+import re
 from flask import Flask
 from pyrogram import Client, filters
 from pyrogram.types import Message
@@ -50,7 +51,10 @@ async def start_bot():
         await app.start()
     except RPCError as e:
         if isinstance(e, FloodWait):
-            print(f"⚠️ Flood wait error. Full exception: {e}")  # Print full exception details
+            wait_time = int(re.search(r"(\d+)", str(e)).group(1))  # Extract wait time from the error message
+            print(f"⚠️ Flood wait error. Please try again after {wait_time} seconds.")  # Display wait time
+            await asyncio.sleep(wait_time)  # Wait before retrying
+            await start_bot()  # Retry the bot start
         else:
             print(f"❌ RPC Error: {e}")
 
@@ -60,3 +64,4 @@ if __name__ == "__main__":
 
     # Run the bot using asyncio
     asyncio.run(start_bot())
+    
