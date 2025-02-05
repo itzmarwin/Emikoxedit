@@ -11,15 +11,16 @@ from features.config import API_ID, API_HASH, BOT_TOKEN
 app = Client("nezuko_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
 # Edit message delete function
-async def on_message_edit(client, message):
+async def on_message_edit(client, update):
     try:
-        if message.text:  # Check if the message is text
-            await message.delete()  # Delete the edited message
+        # Check if the update contains a message and the message is edited
+        if update.edited_message:
+            await update.edited_message.delete()  # Delete the edited message
     except Exception as e:
         print(f"Error deleting edited message: {e}")
 
 # Add the handler to monitor edited messages in groups
-app.add_handler(MessageHandler(on_message_edit, filters.edited))  # Using filters.edited correctly
+app.add_handler(MessageHandler(on_message_edit, filters.update))  # Use filters.update
 
 # Flask Server for Render Free Hosting
 server = Flask(__name__)
@@ -40,3 +41,4 @@ if __name__ == "__main__":
 
     # Pyrogram bot start karna
     app.run()
+    
