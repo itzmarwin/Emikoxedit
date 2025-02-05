@@ -1,7 +1,7 @@
 import os
 import threading
 from flask import Flask
-from pyrogram import Client, filters
+from pyrogram import Client
 from config import API_ID, API_HASH, BOT_TOKEN  
 from features.edit import register_edit_handlers  # Import edit handler
 
