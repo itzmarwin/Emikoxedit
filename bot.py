@@ -5,6 +5,7 @@ from flask import Flask
 import threading
 import logging
 import random
+import time
 
 # Importing the delete function from the edit feature
 from features.edit import delete_edited_message
@@ -65,11 +66,21 @@ def run_flask():
     PORT = int(os.environ.get("PORT", 8080))  # Agar PORT na ho, toh 8080 default rahega
     server.run(host="0.0.0.0", port=PORT)
 
+async def start_bot():
+    while True:
+        try:
+            await app.start()
+            break
+        except Exception as e:
+            logging.error(f"Error while starting bot: {e}")
+            logging.info("Reconnecting in 10 seconds...")
+            time.sleep(10)
+
 if __name__ == "__main__":
     print("✅ Bot is starting...")
 
     # Flask ko alag thread pe run karo
     threading.Thread(target=run_flask, daemon=True).start()
 
-    # Pyrogram bot run karna
-    app.run()
+    # Start Pyrogram bot
+    asyncio.run(start_bot())  # Use asyncio to handle bot startup with error handling
