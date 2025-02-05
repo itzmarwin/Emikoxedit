@@ -3,6 +3,7 @@ from pyrogram.handlers import MessageHandler
 import os
 from flask import Flask
 import threading
+import asyncio
 
 # Import config variables
 from features.config import API_ID, API_HASH, BOT_TOKEN
@@ -13,13 +14,13 @@ app = Client("nezuko_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN
 # Edit message delete function
 async def on_message_edit(client, message):
     try:
-        if message.edited:  # Check if the message is edited
+        if message.text:  # Check if the message is text
             await message.delete()  # Delete the edited message
     except Exception as e:
         print(f"Error deleting edited message: {e}")
 
 # Add the handler to monitor edited messages in groups
-app.add_handler(MessageHandler(on_message_edit, filters.group))
+app.add_handler(MessageHandler(on_message_edit, filters.group & filters.edited))
 
 # Flask Server for Render Free Hosting
 server = Flask(__name__)
@@ -32,11 +33,14 @@ def run_flask():
     PORT = int(os.environ.get("PORT", 8080))  # Default port 8080
     server.run(host="0.0.0.0", port=PORT)
 
-if __name__ == "__main__":
+async def start_bot():
     print("✅ Bot is starting...")
+    await app.start()  # Start the Pyrogram bot
 
+if __name__ == "__main__":
     # Flask ko alag thread pe run karna
     threading.Thread(target=run_flask, daemon=True).start()
 
-    # Pyrogram bot start karna
-    app.run()
+    # Run Pyrogram bot with asyncio
+    asyncio.run(start_bot())
+    
