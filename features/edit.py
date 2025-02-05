@@ -8,7 +8,7 @@ def register_edit_handlers(app: Client):
             try:
                 await message.delete()
                 await message.reply_text(
-                    f"✨ **Hey {message.from_user.mention}, edited messages are not allowed!**",
+                    f"🚀 **Hey {message.from_user.mention}, edited messages are not allowed!**",
                     quote=True
                 )
             except Exception as e:
