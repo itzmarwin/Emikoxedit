@@ -1,3 +1,4 @@
+import asyncio  # ✅ Import asyncio
 from pyrogram import Client, filters
 import os
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -62,8 +63,7 @@ def home():
     return "Bot is running!"
 
 def run_flask():
-    # PORT ko environment variable se get karo
-    PORT = int(os.environ.get("PORT", 8080))  # Agar PORT na ho, toh 8080 default rahega
+    PORT = int(os.environ.get("PORT", 8080))  # Default to 8080 if PORT is not set
     server.run(host="0.0.0.0", port=PORT)
 
 async def start_bot():
@@ -79,8 +79,8 @@ async def start_bot():
 if __name__ == "__main__":
     print("✅ Bot is starting...")
 
-    # Flask ko alag thread pe run karo
+    # Start Flask in a separate thread
     threading.Thread(target=run_flask, daemon=True).start()
 
-    # Start Pyrogram bot
-    asyncio.run(start_bot())  # Use asyncio to handle bot startup with error handling
+    # ✅ Use asyncio to start the bot
+    asyncio.run(start_bot())  # Fix applied
