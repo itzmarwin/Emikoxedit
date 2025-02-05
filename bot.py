@@ -50,13 +50,14 @@ async def start_bot():
     try:
         await app.start()
     except RPCError as e:
+        print(f"❌ RPC Error: {str(e)}")  # Log full error
         if isinstance(e, FloodWait):
             wait_time = int(re.search(r"(\d+)", str(e)).group(1))  # Extract wait time from the error message
             print(f"⚠️ Flood wait error. Please try again after {wait_time} seconds.")  # Display wait time
             await asyncio.sleep(wait_time)  # Wait before retrying
             await start_bot()  # Retry the bot start
         else:
-            print(f"❌ RPC Error: {e}")
+            print(f"❌ Unhandled Error: {str(e)}")
 
 if __name__ == "__main__":
     # Run Flask in a separate thread
