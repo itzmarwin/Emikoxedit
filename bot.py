@@ -1,41 +1,58 @@
-import asyncio
-from flask import Flask
-from threading import Thread
 from pyrogram import Client, filters
-from pyrogram.types import Message
+import os
+from motor.motor_asyncio import AsyncIOMotorClient
+from flask import Flask
+import threading
 
-# Bot Configuration
-API_ID = 21346925  
-API_HASH = "908c9a085a238d1cd484a4269c887234"  
-BOT_TOKEN = "7733194032:AAGSzRGA3ihA_fvngTa0h60sBkBKX6BjWaQ"  
+# Config Variables
+API_ID = int(os.getenv("API_ID", ""))
+API_HASH = os.getenv("API_HASH", "")
+BOT_TOKEN = os.getenv("BOT_TOKEN", "")
+MONGO_URL = os.getenv("MONGO_URL", "")
 
 # Initialize Bot
 app = Client("EmikoXEdit", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
-# Flask Web Server (to keep bot alive on Render)
+# Connect to MongoDB
+mongo_client = AsyncIOMotorClient(MONGO_URL)
+db = mongo_client["EmikoXEdit"]
+broadcast_collection = db["broadcast_users"]
+
+# Start Command
+@app.on_message(filters.command("start") & filters.private)
+async def start(client, message):
+    await message.reply("👋 Hello! I'm Emiko X Edit. Add me to a group as admin to use my features.")
+
+# Edit Message Handler (To delete edited messages)
+@app.on_message(filters.group & filters.text)
+async def check_edit(client, message):
+    if message.edit_date:  # Check if the message is edited
+        try:
+            await message.delete()
+            await message.reply_text(
+                "✨ **Oops! You edited your message, so I had to delete it!**\n\n"
+                "🚀 **Next time, think before you send!**",
+                reply_to_message_id=message.message_id
+            )
+        except Exception as e:
+            print(f"❌ Error deleting edited message: {e}")
+
+# Flask app (for Render keep-alive)
 server = Flask(__name__)
 
 @server.route('/')
 def home():
-    return "Emiko X Edit Bot is Running!"
+    return "Bot is running!"
 
-def run_web():
-    server.run(host="0.0.0.0", port=8080)
+def run_flask():
+    PORT = int(os.environ.get("PORT", 8080))  # Default port 8080
+    server.run(host="0.0.0.0", port=PORT)
 
-# Function to delete edited messages
-@app.on_message(filters.group & filters.create(lambda _, __, m: bool(m.edit_date)))
-async def delete_edited_message(client: Client, message: Message):
-    try:
-        await message.delete()
-        await message.reply_text(
-            f"**Hey {message.from_user.mention}, your edited message has been deleted.**"
-        )
-    except Exception as e:
-        print(f"Error deleting message: {e}")
-
-# Start Flask Server & Bot
 if __name__ == "__main__":
-    Thread(target=run_web).start()  # Flask server run karega
-    print("Bot is starting...")
+    print("✅ Bot is starting...")
+
+    # Flask ko alag thread pe run karo
+    threading.Thread(target=run_flask, daemon=True).start()
+
+    # Pyrogram bot run karna
     app.run()
-    
