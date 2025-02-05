@@ -1,4 +1,5 @@
 pyrogram
+motor
 tgcrypto
 pymongo
 flask
