@@ -22,10 +22,11 @@ def home():
 def run_web():
     server.run(host="0.0.0.0", port=8080)
 
-# Function to delete edited messages
+# Function to delete edited messages with Debugging Line
 @app.on_message(filters.group & filters.create(lambda _, __, m: bool(m.edit_date)))
 async def delete_edited_message(client: Client, message: Message):
     try:
+        print(f"🚨 Edited message detected from {message.from_user.username}: {message.text}")  # Debugging Line
         await message.delete()
         await message.reply_text(
             f"**Hey {message.from_user.mention}, your edited message has been deleted.**"
@@ -38,3 +39,4 @@ if __name__ == "__main__":
     Thread(target=run_web).start()  # Flask server run karega
     print("Bot is starting...")
     app.run()
+    
