@@ -41,13 +41,15 @@ def home():
     return "Bot is running!"
 
 def run_flask():
-    server.run(host="0.0.0.0", port=8080)
+    server.run(host="0.0.0.0", port=8080, use_reloader=False)  # Disable reloader to avoid issues
+
+async def start_bot():
+    print("✅ Bot is starting...")
+    await app.start()
 
 if __name__ == "__main__":
-    print("✅ Bot is starting...")
-
-    # Flask ko alag thread pe run karo
+    # Run Flask in a separate thread
     threading.Thread(target=run_flask, daemon=True).start()
 
-    # Pyrogram bot run karna
-    app.run()
+    # Run the bot using asyncio
+    asyncio.run(start_bot())
