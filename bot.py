@@ -1,5 +1,4 @@
 from pyrogram import Client, filters
-from pyrogram.handlers import MessageHandler
 import os
 from flask import Flask
 import threading
@@ -8,14 +7,13 @@ from features.config import API_ID, API_HASH, BOT_TOKEN
 
 app = Client("nezuko_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
+# Edited messages ke liye handler
+@app.on_edited_message()
 async def on_message_edit(client, message):
     try:
         await message.delete()  # Edited message delete karega
     except Exception as e:
         print(f"Error: {e}")
-
-# Edited messages ke liye handler
-app.add_handler(MessageHandler(on_message_edit, filters.edited))  # Updated filter
 
 server = Flask(__name__)
 
