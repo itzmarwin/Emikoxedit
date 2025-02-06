@@ -10,11 +10,12 @@ app = Client("nezuko_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN
 
 async def on_message_edit(client, message):
     try:
-        await message.delete()
+        await message.delete()  # Edited message delete karega
     except Exception as e:
         print(f"Error: {e}")
 
-app.add_handler(MessageHandler(on_message_edit, filters.edited_message))
+# Edited messages ke liye handler
+app.add_handler(MessageHandler(on_message_edit, filters.edited))  # Updated filter
 
 server = Flask(__name__)
 
