@@ -1,13 +1,14 @@
 from pyrogram import Client, filters
 from pyrogram.handlers import MessageHandler
+from config import API_ID, API_HASH, BOT_TOKEN
 
-# Edit message delete function
+app = Client("my_bot", API_ID, API_HASH, BOT_TOKEN)
+
 async def on_message_edit(client, message):
     try:
-        if message.text:  # Check if the message is text
-            await message.delete()  # Delete the edited message
+        await message.delete()
     except Exception as e:
-        print(f"Error deleting edited message: {e}")
+        print(f"Error: {e}")
 
-# Add the handler to monitor edited messages in groups
-app.add_handler(MessageHandler(on_message_edit, filters.group & filters.edited))
+app.add_handler(MessageHandler(on_message_edit, filters.edited_message))
+app.run()
