@@ -4,25 +4,18 @@ import os
 from flask import Flask
 import threading
 import asyncio
-
-# Import config variables
 from features.config import API_ID, API_HASH, BOT_TOKEN
 
-# Initialize the bot
 app = Client("nezuko_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
-# Edit message delete function
 async def on_message_edit(client, message):
     try:
-        if message.text:  # Check if the message is text
-            await message.delete()  # Delete the edited message
+        await message.delete()
     except Exception as e:
-        print(f"Error deleting edited message: {e}")
+        print(f"Error: {e}")
 
-# Add the handler to monitor edited messages in groups
-app.add_handler(MessageHandler(on_message_edit, filters.update.edited_message))  # Corrected filter
+app.add_handler(MessageHandler(on_message_edit, filters.edited_message))
 
-# Flask Server for Render Free Hosting
 server = Flask(__name__)
 
 @server.route('/')
@@ -30,17 +23,12 @@ def home():
     return "Bot is running!"
 
 def run_flask():
-    PORT = int(os.environ.get("PORT", 8080))  # Default port 8080
-    server.run(host="0.0.0.0", port=PORT)
+    server.run(host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
 
 async def start_bot():
-    print("✅ Bot is starting...")
-    await app.start()  # Start the Pyrogram bot
+    print("✅ Bot started!")
+    await app.start()
 
 if __name__ == "__main__":
-    # Flask ko alag thread pe run karna
     threading.Thread(target=run_flask, daemon=True).start()
-
-    # Run Pyrogram bot with asyncio
     asyncio.run(start_bot())
-    
