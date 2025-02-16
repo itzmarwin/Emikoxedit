@@ -1,0 +1,206 @@
+import os
+import asyncio
+import datetime
+import re
+from datetime import UTC, timedelta
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    MessageHandler,
+    filters,
+    CallbackContext,
+    CallbackQueryHandler,
+)
+from motor.motor_asyncio import AsyncIOMotorClient
+from dotenv import load_dotenv
+from telegram.error import BadRequest
+
+# ------------------- Environment Setup -------------------
+load_dotenv()
+TOKEN = os.getenv("BOT_TOKEN")
+MONGO_URI = os.getenv("MONGO_URI")
+LOGGER_GROUP_ID = int(os.getenv("LOGGER_GROUP_ID", 0))
+OWNER_ID = int(os.getenv("OWNER_ID", 0))
+
+# ------------------- MongoDB Collections -------------------
+client = AsyncIOMotorClient(MONGO_URI)
+db = client["SakuraStats"]
+
+daily_groups = db["daily_groups"]
+overall_groups = db["overall_groups"]
+daily_users = db["daily_users"]
+overall_users = db["overall_users"]
+group_milestones = db["group_milestones"]
+sudo_list = db["sudo_list"]
+tracked_groups = db["tracked_groups"]
+
+# ------------------- Utility Functions -------------------
+async def escape_markdown(text: str) -> str:
+    return re.sub(r'([_*\[\]()~`>#+=|{}.!-])', r'\\\1', text[:25]) if text else "Anonymous"
+
+async def log_event(context: CallbackContext, text: str):
+    if LOGGER_GROUP_ID:
+        await context.bot.send_message(LOGGER_GROUP_ID, text, parse_mode="MarkdownV2")
+
+async def is_owner(user_id: int) -> bool:
+    return user_id == OWNER_ID
+
+async def is_sudo(user_id: int) -> bool:
+    return await is_owner(user_id) or await sudo_list.find_one({"user_id": user_id})
+
+# ------------------- New Group Logger -------------------
+async def new_group(update: Update, context: CallbackContext):
+    if update.message.new_chat_members and context.bot.id in [u.id for u in update.message.new_chat_members]:
+        group = update.message.chat
+        adder = update.message.from_user
+        
+        await tracked_groups.update_one(
+            {"group_id": group.id},
+            {"$set": {"group_name": await escape_markdown(group.title)}},
+            upsert=True
+        )
+        
+        log_text = (
+            f"🌸 **New Group Added** 🌸\n\n"
+            f"🏷 Name: `{group.title}`\n"
+            f"🆔 ID: `{group.id}`\n"
+            f"👤 Added by: {adder.mention_markdown_v2()}"
+        )
+        await log_event(context, log_text)
+
+# ------------------- Sudo Management -------------------
+async def addsudo(update: Update, context: CallbackContext):
+    if not await is_owner(update.effective_user.id):
+        await update.message.reply_text("❌ Only owner can use this command!")
+        return
+    
+    target_user = None
+    if update.message.reply_to_message:
+        target_user = update.message.reply_to_message.from_user
+    elif context.args:
+        try:
+            target_user = await context.bot.get_chat(context.args[0])
+        except:
+            pass
+    
+    if not target_user:
+        await update.message.reply_text("❌ Reply to a user or provide username/userid!")
+        return
+    
+    await sudo_list.update_one(
+        {"user_id": target_user.id},
+        {"$set": {"username": target_user.username}},
+        upsert=True
+    )
+    await update.message.reply_text(f"✅ Added @{target_user.username} to sudo list!")
+
+async def rmsudo(update: Update, context: CallbackContext):
+    if not await is_owner(update.effective_user.id):
+        await update.message.reply_text("❌ Only owner can use this command!")
+        return
+    
+    target_user = None
+    if update.message.reply_to_message:
+        target_user = update.message.reply_to_message.from_user
+    elif context.args:
+        try:
+            target_user = await context.bot.get_chat(context.args[0])
+        except:
+            pass
+    
+    if not target_user:
+        await update.message.reply_text("❌ Reply to a user or provide username/userid!")
+        return
+    
+    result = await sudo_list.delete_one({"user_id": target_user.id})
+    if result.deleted_count > 0:
+        await update.message.reply_text(f"✅ Removed @{target_user.username} from sudo list!")
+    else:
+        await update.message.reply_text("❌ User not in sudo list!")
+
+async def sudolist(update: Update, context: CallbackContext):
+    if not await is_sudo(update.effective_user.id):
+        await update.message.reply_text("❌ You need sudo access to use this command!")
+        return
+    
+    sudos = await sudo_list.find({}).to_list(None)
+    text = "👑 **Sudo Users List** 👑\n\n" + "\n".join(
+        [f"• @{u['username']} (`{u['user_id']}`)" for u in sudos]
+    )
+    await update.message.reply_text(text, parse_mode="MarkdownV2")
+
+# ------------------- Broadcast System -------------------
+async def broadcast(update: Update, context: CallbackContext):
+    if not await is_sudo(update.effective_user.id):
+        await update.message.reply_text("❌ Sudo access required!")
+        return
+    
+    args = context.args
+    flags = {
+        "pin": "-pin" in args,
+        "user": "-user" in args
+    }
+    message = " ".join([arg for arg in args if not arg.startswith("-")])
+    
+    success = {"groups": 0, "users": 0}
+    
+    if not flags["user"]:
+        groups = await tracked_groups.distinct("group_id")
+        for group_id in groups:
+            try:
+                msg = await context.bot.send_message(group_id, message)
+                if flags["pin"]:
+                    await msg.pin()
+                success["groups"] += 1
+            except:
+                continue
+    
+    if flags["user"]:
+        users = await overall_users.distinct("user_id")
+        for user_id in users:
+            try:
+                await context.bot.send_message(user_id, message)
+                success["users"] += 1
+            except:
+                continue
+    
+    await update.message.reply_text(
+        f"📢 Broadcast Results:\n"
+        f"• Groups: {success['groups']}\n"
+        f"• Users: {success['users']}"
+    )
+
+# ------------------- Rest of the Code -------------------
+# [Previous code for /start, tracking, /gstat, /topgroups, /topusers, /profile, /stats, etc.]
+
+# ------------------- Main Function -------------------
+def main():
+    application = Application.builder().token(TOKEN).build()
+    
+    # Command Handlers
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("gstat", gstat))
+    application.add_handler(CommandHandler("topgroups", topgroups))
+    application.add_handler(CommandHandler("topusers", topusers))
+    application.add_handler(CommandHandler("profile", profile))
+    application.add_handler(CommandHandler("stats", stats))
+    application.add_handler(CommandHandler("broadcast", broadcast))
+    application.add_handler(CommandHandler("addsudo", addsudo))
+    application.add_handler(CommandHandler("rmsudo", rmsudo))
+    application.add_handler(CommandHandler("sudolist", sudolist))
+    
+    # Message Handlers
+    application.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, track_message))
+    application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, new_group))
+    
+    # Callback Handler
+    application.add_handler(CallbackQueryHandler(button_handler))
+    
+    # Jobs
+    application.job_queue.run_daily(daily_reset, time=datetime.time(0, 0, tzinfo=datetime.timezone.utc))
+    
+    application.run_polling()
+
+if __name__ == "__main__":
+    main()
